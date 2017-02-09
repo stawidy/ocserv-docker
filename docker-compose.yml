@@ -1,0 +1,12 @@
+ocserv:
+  image: stawidy/ocserv
+  ports:
+    - "443:443/tcp"
+    - "443:443/udp"
+  environment:
+    - VPN_DOMAIN=your.domain.name
+    - VPN_NETWORK=10.0.6.0
+    - VPN_NETMASK=255.255.255.0
+  cap_add:
+    - NET_ADMIN
+  restart: always
