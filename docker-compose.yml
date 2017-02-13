@@ -4,7 +4,12 @@ ocserv:
     - "443:443/tcp"
     - "443:443/udp"
   environment:
-    - VPN_DOMAIN=your.domain.name
+    - CA_CN="Sample CN"
+    - CA_ORG="Sample ORG"
+    - CA_DAYS=9999
+    - SRV_CN="your.domain.name"
+    - SRV_ORG="Sample ORG"
+    - SRV_DAYS=9999
     - VPN_NETWORK=10.0.6.0
     - VPN_NETMASK=255.255.255.0
   cap_add:

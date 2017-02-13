@@ -2,34 +2,82 @@
 # Dockerfile for ocserv
 #
 
-FROM ubuntu:zesty
+FROM alpine
+
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-RUN set -x \
-    && apt-get update \
-    && apt-get install -y ocserv iptables gnutls-bin \
-    && sed -i 's/\.\/sample\.passwd/\/etc\/ocserv\/ocpasswd/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/\(max-same-clients = \)2/\110/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/\.\.\/tests/\/etc\/ocserv/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/#\(compression.*\)/\1/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/192.168.1.2/8.8.8.8/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/^route/#route/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/^no-route/#no-route/' /etc/ocserv/ocserv.conf \
-    && sed -i 's/^auth/#auth/' /etc/ocserv/ocserv.conf \
-    && echo 'auth = "plain[passwd=/etc/ocserv/ocpasswd]"' >> /etc/ocserv/ocserv.conf \
-    && cd .. \
-    && apt-get clean
+ARG OC_VERSION=0.11.7
 
-COPY init.sh /init.sh
+RUN set -ex \
+    apk add --no-cache --virtual .build-deps \
+                                curl \
+                                g++ \
+                                gnutls-dev \
+                                gpgme \
+                                libev-dev \
+                                libnl3-dev \
+                                libseccomp-dev \
+                                linux-headers \
+                                linux-pam-dev \
+                                lz4-dev \
+                                make \
+                                readline-dev \
+                                tar \
+                                xz \
+    && apk add --no-cache gnutls \
+                          gnutls-utils \
+                          iptables \
+                          libev \
+                          libintl \
+                          libnl3 \
+                          libseccomp \
+                          linux-pam \
+                          lz4 \
+                          openssl \
+                          readline \
+                          sed \
+    && curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz" -o ocserv.tar.xz \
+    && curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz.sig" -o ocserv.tar.xz.sig \
+    && gpg --keyserver pgp.mit.edu --recv-key 7F343FA7 \
+    && gpg --keyserver pgp.mit.edu --recv-key 96865171 \
+    && gpg --verify ocserv.tar.xz.sig \
+    && mkdir -p /usr/src/ocserv \
+    && tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
+    && rm ocserv.tar.xz* \
+    && cd /usr/src/ocserv \
+    && ./configure \
+    && make \
+    && make install \
+    && mkdir -p /etc/ocserv \
+    && cp /usr/src/ocserv/doc/sample.config /etc/ocserv/ocserv.conf \
+    && sed -i -e 's/\.\/sample\.passwd/\/etc\/ocserv\/ocpasswd/' \
+              -e 's/\(max-same-clients = \)2/\110/' \
+              -e 's/\.\.\/tests/\/etc\/ocserv/' \
+              -e 's/#\(compression.*\)/\1/' \
+              -e 's/192.168.1.2/8.8.8.8/' \
+              -e 's/^try-mtu-discovery = false/try-mtu-discovery = true/' \
+              -e 's/^route/#route/' \
+              -e 's/^no-route/#no-route/' \
+              /etc/ocserv/ocserv.conf \
+    && cd / \
+    && rm -rf /usr/src/ocserv \
+    && apk del .build-deps \
+    && rm -rf /tmp/*
+
+ENV CA_CN="Sample CN" \
+    CA_ORG="Sample ORG" \
+    CA_DAYS=9999 \
+    SRV_CN="your.domain.name" \
+    SRV_ORG="Sample ORG" \
+    SRV_DAYS=9999 \
+    VPN_NETWORK=10.0.6.0 \
+    VPN_NETMASK=255.255.255.0
+
+
+WORKDIR /etc/ocserv
+
 COPY docker-entrypoint.sh /entrypoint.sh
-
-VOLUME /etc/ocserv
-
-ENV VPN_DOMAIN    your.domain.name
-ENV VPN_NETWORK   10.0.6.0
-ENV VPN_NETMASK   255.255.255.0
-ENV TERM          xterm
+ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 443/tcp 443/udp
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["ocserv", "-c", "/etc/ocserv/ocserv.conf", "-f"]
