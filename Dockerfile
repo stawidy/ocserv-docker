@@ -9,21 +9,21 @@ MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 ARG OC_VERSION=0.11.7
 
 RUN set -ex \
-    apk add --no-cache --virtual .build-deps \
-                                curl \
-                                g++ \
-                                gnutls-dev \
-                                gpgme \
-                                libev-dev \
-                                libnl3-dev \
-                                libseccomp-dev \
-                                linux-headers \
-                                linux-pam-dev \
-                                lz4-dev \
-                                make \
-                                readline-dev \
-                                tar \
-                                xz \
+    && apk add --no-cache --virtual .build-deps \
+                                    curl \
+                                    g++ \
+                                    gnutls-dev \
+                                    gpgme \
+                                    libev-dev \
+                                    libnl3-dev \
+                                    libseccomp-dev \
+                                    linux-headers \
+                                    linux-pam-dev \
+                                    lz4-dev \
+                                    make \
+                                    readline-dev \
+                                    tar \
+                                    xz \
     && apk add --no-cache gnutls \
                           gnutls-utils \
                           iptables \
