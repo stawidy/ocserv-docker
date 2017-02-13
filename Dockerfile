@@ -24,7 +24,8 @@ RUN set -ex \
                                     readline-dev \
                                     tar \
                                     xz \
-    && apk add --no-cache gnutls \
+    && apk add --no-cache --virtual .run-deps \
+                          gnutls \
                           gnutls-utils \
                           iptables \
                           libev \
