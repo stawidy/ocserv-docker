@@ -6,7 +6,7 @@ FROM alpine
 
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-ARG OC_VERSION=0.11.7
+ARG OC_VERSION=0.11.8
 
 RUN set -ex \
     && apk add --no-cache --virtual .build-deps \
