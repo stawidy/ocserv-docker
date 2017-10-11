@@ -6,51 +6,51 @@ FROM alpine
 
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-ARG OC_VERSION=0.11.8
+ARG OC_VERSION=0.11.9
 
-RUN set -ex \
-    && apk add --no-cache --virtual .build-deps \
-                                    curl \
-                                    g++ \
-                                    gnutls-dev \
-                                    gpgme \
-                                    libev-dev \
-                                    libnl3-dev \
-                                    libseccomp-dev \
-                                    linux-headers \
-                                    linux-pam-dev \
-                                    lz4-dev \
-                                    make \
-                                    readline-dev \
-                                    tar \
-                                    xz \
-    && apk add --no-cache --virtual .run-deps \
-                          gnutls \
-                          gnutls-utils \
-                          iptables \
-                          libev \
-                          libintl \
-                          libnl3 \
-                          libseccomp \
-                          linux-pam \
-                          lz4 \
-                          openssl \
-                          readline \
-                          sed \
-    && curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz" -o ocserv.tar.xz \
-    && curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz.sig" -o ocserv.tar.xz.sig \
-    && gpg --keyserver pgp.mit.edu --recv-key 7F343FA7 \
-    && gpg --keyserver pgp.mit.edu --recv-key 96865171 \
-    && gpg --verify ocserv.tar.xz.sig \
-    && mkdir -p /usr/src/ocserv \
-    && tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
-    && rm ocserv.tar.xz* \
-    && cd /usr/src/ocserv \
-    && ./configure \
-    && make \
-    && make install \
-    && mkdir -p /etc/ocserv \
-    && cp /usr/src/ocserv/doc/sample.config /etc/ocserv/ocserv.conf \
+RUN buildDeps=" \
+		curl \
+		g++ \
+		gnutls-dev \
+		gpgme \
+		libev-dev \
+		libnl3-dev \
+		libseccomp-dev \
+		linux-headers \
+		linux-pam-dev \
+		lz4-dev \
+		make \
+		readline-dev \
+		tar \
+		xz \
+	"; \
+	set -x \
+	&& apk add --update --virtual .build-deps $buildDeps \
+	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz" -o ocserv.tar.xz \
+	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz.sig" -o ocserv.tar.xz.sig \
+	&& gpg --keyserver pgp.mit.edu --recv-key 7F343FA7 \
+	&& gpg --keyserver pgp.mit.edu --recv-key 96865171 \
+	&& gpg --verify ocserv.tar.xz.sig \
+	&& mkdir -p /usr/src/ocserv \
+	&& tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
+	&& rm ocserv.tar.xz* \
+	&& cd /usr/src/ocserv \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& mkdir -p /etc/ocserv \
+	&& cp /usr/src/ocserv/doc/sample.config /etc/ocserv/ocserv.conf \
+	&& cd / \
+	&& rm -fr /usr/src/ocserv \
+	&& runDeps="$( \
+		scanelf --needed --nobanner /usr/local/sbin/ocserv \
+			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+			| xargs -r apk info --installed \
+			| sort -u \
+		)" \
+	&& apk add --virtual .run-deps $runDeps gnutls-utils iptables \
+	&& apk del .build-deps \
+    && rm -rf /var/cache/apk/* \
     && sed -i -e 's/\.\/sample\.passwd/\/etc\/ocserv\/ocpasswd/' \
               -e 's/\(max-same-clients = \)2/\110/' \
               -e 's/\.\.\/tests/\/etc\/ocserv/' \
@@ -59,11 +59,7 @@ RUN set -ex \
               -e 's/^try-mtu-discovery = false/try-mtu-discovery = true/' \
               -e 's/^route/#route/' \
               -e 's/^no-route/#no-route/' \
-              /etc/ocserv/ocserv.conf \
-    && cd / \
-    && rm -rf /usr/src/ocserv \
-    && apk del .build-deps \
-    && rm -rf /tmp/*
+              /etc/ocserv/ocserv.conf
 
 ENV CA_CN="Sample CN" \
     CA_ORG="Sample ORG" \
