@@ -48,6 +48,7 @@ iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 # Enable TUN device
 mkdir -p /dev/net
+rm -f /dev/net/tun
 mknod /dev/net/tun c 10 200
 chmod 600 /dev/net/tun
 

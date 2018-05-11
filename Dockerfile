@@ -6,7 +6,7 @@ FROM alpine
 
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-ARG OC_VERSION=0.11.12
+ARG OC_VERSION=0.12.0
 
 RUN buildDeps=" \
 		curl \
@@ -39,7 +39,6 @@ RUN buildDeps=" \
 	&& make \
 	&& make install \
 	&& mkdir -p /etc/ocserv \
-	&& cp /usr/src/ocserv/doc/sample.config /etc/ocserv/ocserv.conf \
 	&& cd / \
 	&& rm -fr /usr/src/ocserv \
 	&& runDeps="$( \
@@ -50,16 +49,7 @@ RUN buildDeps=" \
 		)" \
 	&& apk add --virtual .run-deps $runDeps gnutls-utils iptables \
 	&& apk del .build-deps \
-    && rm -rf /var/cache/apk/* \
-    && sed -i -e 's/\.\/sample\.passwd/\/etc\/ocserv\/ocpasswd/' \
-              -e 's/\(max-same-clients = \)2/\110/' \
-              -e 's/\.\.\/tests/\/etc\/ocserv/' \
-              -e 's/#\(compression.*\)/\1/' \
-              -e 's/192.168.1.2/8.8.8.8/' \
-              -e 's/^try-mtu-discovery = false/try-mtu-discovery = true/' \
-              -e 's/^route/#route/' \
-              -e 's/^no-route/#no-route/' \
-              /etc/ocserv/ocserv.conf
+    && rm -rf /var/cache/apk/*
 
 ENV CA_CN="Sample CN" \
     CA_ORG="Sample ORG" \
@@ -73,6 +63,7 @@ ENV CA_CN="Sample CN" \
 
 WORKDIR /etc/ocserv
 
+COPY ocserv.conf /etc/ocserv/ocserv.conf
 COPY docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
