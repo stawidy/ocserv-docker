@@ -6,7 +6,7 @@ FROM alpine
 
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-ARG OC_VERSION=0.12.0
+ARG OC_VERSION=0.12.1
 
 RUN buildDeps=" \
 		curl \
