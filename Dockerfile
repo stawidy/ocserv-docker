@@ -2,11 +2,11 @@
 # Dockerfile for ocserv
 #
 
-FROM alpine
+FROM alpine:3.12
 
 MAINTAINER stawidy <duyizhaozj321@yahoo.com>
 
-ARG OC_VERSION=0.12.5
+ARG OC_VERSION=1.1.3
 
 RUN buildDeps=" \
 		curl \
@@ -28,8 +28,7 @@ RUN buildDeps=" \
 	&& apk add --update --virtual .build-deps $buildDeps \
 	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz" -o ocserv.tar.xz \
 	&& curl -SL "ftp://ftp.infradead.org/pub/ocserv/ocserv-$OC_VERSION.tar.xz.sig" -o ocserv.tar.xz.sig \
-	&& gpg --keyserver pool.sks-keyservers.net --recv-key 7F343FA7 \
-	&& gpg --keyserver pool.sks-keyservers.net --recv-key 96865171 \
+	&& gpg --keyserver hkps://keyserver.ubuntu.com --recv-key 1F42418905D8206AA754CCDC29EE58B996865171 \
 	&& gpg --verify ocserv.tar.xz.sig \
 	&& mkdir -p /usr/src/ocserv \
 	&& tar -xf ocserv.tar.xz -C /usr/src/ocserv --strip-components=1 \
